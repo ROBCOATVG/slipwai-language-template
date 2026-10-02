@@ -34,12 +34,26 @@ repository, under `specs/001-slipwai-2-language-addons/contracts/` (`backend-pro
 
 1. Copy the repository into a directory of its own named for your language, `languages/mylang`: an installed
    package's directory name is its `name`, and the command line finds the package by it in the directory above.
-2. Replace every `toy` the files hold with `mylang` (`git grep -l toy | xargs sed -i 's/toy/mylang/g'`), and rename
-   the three things named for it: the Python package `slipwai_language_toy/` (`slipwai_language_mylang/`; a dash in
-   the name becomes `_`), `assets/languages/toy/` and `assets/backing-services/toy/`. That covers `language.json`'s
-   `name`, `family` and backend key (`mylang-plain`: rename `plain` for your framework, or see *Adding a framework*
-   for a language where nothing owns startup), the `Family` and `Backend` in `LANGUAGE` and the paths into `assets/`;
-   `tests/test_conformance.py` reads the name from `language.json`.
+2. Replace every `toy` and `Toy` the files hold with `mylang` and `Mylang`, and rename the four things named for it:
+   the Python package `slipwai_language_toy/` (`slipwai_language_mylang/`; a dash in the name becomes `_`),
+   `assets/languages/toy/`, `assets/backing-services/toy/` and the fragment `changelog.d/toy-language.md`. The rename
+   is case-sensitive, so `s/toy/mylang/g` alone leaves two things behind: `language.json`'s `label`, which reads
+   `Toy — the language template's inert placeholder…` and is what `slipwai list` and the interview show, and the
+   fragment's file name. From a git clone this does all of it and leaves no `toy` or `Toy` in any file or path:
+
+   ```sh
+   git grep -lIi toy | xargs sed -i 's/toy/mylang/g; s/Toy/Mylang/g'
+   git mv changelog.d/toy-language.md changelog.d/mylang-language.md
+   git mv slipwai_language_toy slipwai_language_mylang
+   git mv assets/languages/toy assets/languages/mylang
+   git mv assets/backing-services/toy assets/backing-services/mylang
+   ```
+
+   That covers `language.json`'s `name`, `family`, `label` and backend key (`mylang-plain`: rename `plain` for your
+   framework, or see *Adding a framework* for a language where nothing owns startup), the `Family` and `Backend` in
+   `LANGUAGE` and the paths into `assets/`; `tests/test_conformance.py` reads the name from `language.json`. Then
+   write the `label` as your language's own words. A name with a dash needs `_` in the Python package and its paths,
+   which `sed` does not do for you.
 3. Run the suite (below). It passes on the rename alone; from there, replace each placeholder with your language's
    answer, one at a time, and let the suite name what is still missing.
 4. Say what your package ships in a fragment under `changelog.d/`. `VERSION` stays `1.0.0.dev0` until the first
@@ -89,6 +103,11 @@ slipwai list                        # toy, with its version
 slipwai generate demo --backend toy-plain --frontend none --skip-checks --output /tmp/toy-demo
 ```
 
+From a factory checkout, `slipwai list` reads empty of languages when neither `~/.slipwai/languages` nor
+`SLIPWAI_LANGUAGES` names a directory that holds any: the checkout's own languages are under `languages/`, and the
+command does not look there by itself. `SLIPWAI_LANGUAGES=languages ./slipwai list` lists them, and an empty list is
+not a sign the toy is missing.
+
 Install again after each change: the installed copy is a copy. Or point slipwai at the directory holding your clone for
 one command, `SLIPWAI_LANGUAGES=.. slipwai list`, and nothing is copied; `SLIPWAI_LANGUAGES` replaces
 `~/.slipwai/languages` whole, so only what that directory holds is loaded. The suite run above is against that same kind
@@ -101,8 +120,31 @@ A framework of the family is a package of its own beside this one, and touches n
 `"family": "toy"`, `"requires": {"toy": ">=1.0,<2"}` (held against this package's `VERSION`) and one backend
 `toy-<framework>` with its `framework`; its Python declares only that `Backend`, inherits every family-level answer, may
 import this package's (`from slipwai_language_toy.backend import ANSWERS`), and reads the family's shared files through
-`../toy/` the way `backend.py` does. slipwai's own tests write exactly such a framework beside a copy of this template
-and run the suite over both (`tests/test_language_template.py` in the factory's repository).
+`../toy/` the way `backend.py` does.
+
+The smallest `__init__.py` such a framework needs, for `toy-web` in `slipwai_language_toy_web/`, hands the family's
+answers to a new `Backend` under its own key:
+
+```python
+from slipwai import registry as protocol
+from slipwai_language_toy.backend import ANSWERS
+
+LANGUAGE = protocol.Language((), (protocol.Backend("toy-web", "toy", dict(ANSWERS)),))
+```
+
+Beside a copy of this package named `toy`, with a `language.json` and `VERSION` of its own, that passes the suite
+(`python -m slipwai.conformance .. toy-web`). Reusing `ANSWERS` whole is enough while the framework writes the same files
+as `toy-plain`: its store sources start with `../toy/`, so they resolve to the family's copy from any sibling directory.
+
+Re-key `SERVICE_FILES` once the framework answers anything of its own. The inherited `service_files` passes the key
+`toy-plain` to `backing_service_service_files` and `flag_reader`, which read that backend's layout, store sources and
+flag reader, so a framework with a store source, a skeleton or a flag reader of its own is not read until its
+`service_files` passes its own key. The store sources (`WRITE_SIDE_FILES`, `READ_SIDE_FILES`) are re-keyed when the
+framework replaces them or when they are bare names relative to the family's directory: each source then gains the
+`../toy/` prefix, so it reaches the family's copy from the framework's directory. The suite passes a framework that
+reuses `ANSWERS` whether or not it needed either, so this is a decision to make, not one to wait for a failure on.
+slipwai's own tests write a framework that re-keys both beside a copy of this template and run the suite over both
+(`write_scratch_framework` in `tests/test_language_template.py` in the factory's repository).
 
 ## The import surface
 
