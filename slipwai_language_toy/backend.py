@@ -28,6 +28,10 @@ from .family import FAMILY_ANSWERS
 ASSETS = Path(__file__).resolve().parents[1] / "assets"
 # The token the skeleton carries where the service's name goes, resolved by `name_service`.
 SERVICE_NAME = "__SERVICE_NAME__"
+# The backend's key: the family's name and its framework's, because the bare `toy` names what the family's
+# backends share (`assets/languages/toy/`, `assets/backing-services/toy/`), and a framework added beside this one
+# then renames nothing.
+KEY = "toy-plain"
 
 
 def placeholder(what: str) -> str:
@@ -39,9 +43,9 @@ def service_files(event: bool, selection: Selection, target: str = "none") -> di
     """What this backend puts in a service's directory, keyed relative to it."""
     files = asset_tree(ASSETS / "languages/toy/app")
     # What each answered axis adds, read from `write_side_files` and `read_side_files` by core.
-    files.update(backing_service_service_files(selection, "toy"))
+    files.update(backing_service_service_files(selection, KEY))
     # The flag reader, which core writes only where there is somewhere to deploy; `none` gets nothing.
-    files.update(flag_reader(target, "toy"))
+    files.update(flag_reader(target, KEY))
     return files
 
 
@@ -88,18 +92,19 @@ TOOLING: Tooling = {
     "container_environment": {},
 }
 
-# Feature → the asset under `assets/backing-services/toy/` → where it lands in the service. The event-store axis
-# always ships `memory` beside whichever store is chosen, so both sides answer it and every store offered; a real
-# language adds a row per store, transport and provider it offers. `postgres` is offered because an axis whose only
-# answer is `memory` is never asked, so a project would get no store files, and because core's event-store default is
-# `postgres`, which every backend offering a second store must offer.
+# Feature → where it lands in the service → the asset, relative to `assets/backing-services/toy-plain/`, so `../toy/`
+# is the family's copy, which a framework beside this one reads too. The event-store axis always ships `memory` beside
+# whichever store is chosen, so both sides answer it and every store offered; a real language adds a row per store,
+# transport and provider it offers. `postgres` is offered because an axis whose only answer is `memory` is never asked,
+# so a project would get no store files, and because core's event-store default is `postgres`, which every backend
+# offering a second store must offer.
 WRITE_SIDE = {
-    "memory": {"adapters/event_store_memory.txt": "event_store_memory.txt"},
-    "postgres": {"adapters/event_store_postgres.txt": "event_store_postgres.txt"},
+    "memory": {"adapters/event_store_memory.txt": "../toy/event_store_memory.txt"},
+    "postgres": {"adapters/event_store_postgres.txt": "../toy/event_store_postgres.txt"},
 }
 READ_SIDE = {
-    "memory": {"adapters/checkpoint_store_memory.txt": "checkpoint_store_memory.txt"},
-    "postgres": {"adapters/checkpoint_store_postgres.txt": "checkpoint_store_postgres.txt"},
+    "memory": {"adapters/checkpoint_store_memory.txt": "../toy/checkpoint_store_memory.txt"},
+    "postgres": {"adapters/checkpoint_store_postgres.txt": "../toy/checkpoint_store_postgres.txt"},
 }
 
 # Where the flag reader is committed (`assets/languages/toy/flags`), where it lands, and how a slice asks it.
@@ -148,5 +153,5 @@ ANSWERS: dict[protocol.Member[Any], object] = {
 
 LANGUAGE = protocol.Language(
     (protocol.Family("toy", FAMILY_ANSWERS),),
-    (protocol.Backend("toy", "toy", ANSWERS),),
+    (protocol.Backend(KEY, "toy", ANSWERS),),
 )

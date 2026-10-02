@@ -4,7 +4,8 @@
   "order": 90,
   "family": "toy",
   "backends": {
-    "toy": {
+    "toy-plain": {
+      "framework": "plain",
       "label": "Toy — the language template's inert placeholder; not a real language",
       "targets": ["none"],
       "options": {
