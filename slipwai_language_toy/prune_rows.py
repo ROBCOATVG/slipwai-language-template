@@ -11,7 +11,7 @@ from __future__ import annotations
 
 PRUNE_ROWS = {
     "marked_files": (),
-    "owned_files": {"postgres": ("adapters/event_store_postgres.toy", "adapters/checkpoint_store_postgres.toy")},
+    "owned_files": {"postgres": ("adapters/event_store_postgres.txt", "adapters/checkpoint_store_postgres.txt")},
     "package_edits": {},
     "manifest": None,
 }

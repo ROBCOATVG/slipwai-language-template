@@ -7,6 +7,6 @@ the conformance suite running (README.md).
 """
 from __future__ import annotations
 
-from .toy import LANGUAGE
+from .backend import LANGUAGE
 
 __all__ = ["LANGUAGE"]

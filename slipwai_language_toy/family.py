@@ -13,7 +13,7 @@ from slipwai import registry as protocol
 from slipwai.project.renovate import RenovateRules
 from slipwai.services import App
 
-from .toy_prune_rows import PRUNE_ROWS
+from .prune_rows import PRUNE_ROWS
 
 
 def ci_toolchain_setup(services: list[App]) -> str:

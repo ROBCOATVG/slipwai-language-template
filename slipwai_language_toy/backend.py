@@ -23,7 +23,7 @@ from slipwai.selection import Selection
 from slipwai.services import App
 from slipwai.tooling import for_app
 
-from .toy_family import FAMILY_ANSWERS
+from .family import FAMILY_ANSWERS
 
 ASSETS = Path(__file__).resolve().parents[1] / "assets"
 # The token the skeleton carries where the service's name goes, resolved by `name_service`.
@@ -94,17 +94,17 @@ TOOLING: Tooling = {
 # answer is `memory` is never asked, so a project would get no store files, and because core's event-store default is
 # `postgres`, which every backend offering a second store must offer.
 WRITE_SIDE = {
-    "memory": {"adapters/event_store_memory.toy": "event_store_memory.toy"},
-    "postgres": {"adapters/event_store_postgres.toy": "event_store_postgres.toy"},
+    "memory": {"adapters/event_store_memory.txt": "event_store_memory.txt"},
+    "postgres": {"adapters/event_store_postgres.txt": "event_store_postgres.txt"},
 }
 READ_SIDE = {
-    "memory": {"adapters/checkpoint_store_memory.toy": "checkpoint_store_memory.toy"},
-    "postgres": {"adapters/checkpoint_store_postgres.toy": "checkpoint_store_postgres.toy"},
+    "memory": {"adapters/checkpoint_store_memory.txt": "checkpoint_store_memory.txt"},
+    "postgres": {"adapters/checkpoint_store_postgres.txt": "checkpoint_store_postgres.txt"},
 }
 
 # Where the flag reader is committed (`assets/languages/toy/flags`), where it lands, and how a slice asks it.
 READER = FlagReader(
-    tree="toy/flags", source="flags/flags.toy", tests="flags/flags_test.toy", call='flag("checkout-v2")'
+    tree="toy/flags", source="flags/flags.txt", tests="flags/flags_test.txt", call='flag("checkout-v2")'
 )
 
 ANSWERS: dict[protocol.Member[Any], object] = {
@@ -136,10 +136,10 @@ ANSWERS: dict[protocol.Member[Any], object] = {
     protocol.AGENT_PERMISSIONS: [],
     protocol.GATE_DESCRIPTION: "placeholders that echo what a real language's gate would run",
     protocol.EVENT_MODEL_PATHS: lambda project_name, service: {
-        "events": f"{service}/domain/<context>/events.toy",
-        "domain": f"{service}/domain/<context>/decider.toy",
-        "usecase": f"{service}/application/<context>/usecase.toy",
-        "test": f"{service}/domain/<context>/<slice>_test.toy",
+        "events": f"{service}/domain/<context>/events.txt",
+        "domain": f"{service}/domain/<context>/decider.txt",
+        "usecase": f"{service}/application/<context>/usecase.txt",
+        "test": f"{service}/domain/<context>/<slice>_test.txt",
     },
     protocol.MUTATION_TOOL: "none (the toy language has no mutation tool)",
     protocol.PROCFILE: None,
