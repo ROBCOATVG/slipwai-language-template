@@ -39,10 +39,13 @@ repository, under `specs/001-slipwai-2-language-addons/contracts/` (`backend-pro
    `assets/languages/toy/`, `assets/backing-services/toy/` and the fragment `changelog.d/toy-language.md`. The rename
    is case-sensitive, so `s/toy/mylang/g` alone leaves two things behind: `language.json`'s `label`, which reads
    `Toy — the language template's inert placeholder…` and is what `slipwai list` and the interview show, and the
-   fragment's file name. From a git clone this does all of it and leaves no `toy` or `Toy` in any file or path:
+   fragment's file name. From a git clone this does all of it and leaves no `toy` or `Toy` in any file or path. It runs
+   the same under GNU `sed` (Linux) and BSD `sed` (macOS): `-i.bak` is the in-place form both take, and the second line
+   removes the backups it leaves. slipwai's own tests run this block, as written here, on a copy of this repository:
 
    ```sh
-   git grep -lIi toy | xargs sed -i 's/toy/mylang/g; s/Toy/Mylang/g'
+   git grep -lIi toy | xargs sed -i.bak 's/toy/mylang/g; s/Toy/Mylang/g'
+   git ls-files --others '*.bak' | xargs rm -f
    git mv changelog.d/toy-language.md changelog.d/mylang-language.md
    git mv slipwai_language_toy slipwai_language_mylang
    git mv assets/languages/toy assets/languages/mylang
@@ -57,7 +60,7 @@ repository, under `specs/001-slipwai-2-language-addons/contracts/` (`backend-pro
 3. Run the suite (below). It passes on the rename alone; from there, replace each placeholder with your language's
    answer, one at a time, and let the suite name what is still missing.
 4. Say what your package ships in a fragment under `changelog.d/`. `VERSION` stays `1.0.0.dev0` until the first
-   release.
+   release, which you cut by hand (*Cutting a release*, below).
 
 ## Running the suite from this repository
 
@@ -113,6 +116,34 @@ one command, `SLIPWAI_LANGUAGES=.. slipwai list`, and nothing is copied; `SLIPWA
 `~/.slipwai/languages` whole, so only what that directory holds is loaded. The suite run above is against that same kind
 of directory, so the copy in `~/.slipwai/languages` can be checked too: `python -m slipwai.conformance
 ~/.slipwai/languages toy`.
+
+## Cutting a release
+
+slipwai has no release command for a package: a release is cut by hand, and the suite's `version` check is what fails
+whatever a hand-cut release gets wrong. Every number it names is the package's own, independent of slipwai's. From a
+clean checkout of `main`, with the suite green:
+
+1. **Assemble the entry.** Write every fragment in `changelog.d/` (all but its `README.md`) into `CHANGELOG.md` as the
+   newest entry, above the ones there, under the heading `## <version> — <LEVEL>`: the release, and the highest level
+   any fragment claims. The first release has no predecessor to bump, so its heading is `## 1.0.0` alone. Then delete
+   the fragments; `changelog.d/README.md` stays.
+2. **Write the release into `VERSION`**: the snapshot without its suffix, `1.0.0.dev0` becoming `1.0.0`.
+3. **Run the suite.** `version` passes only where `VERSION` is the newest entry, that entry is there, and no fragment
+   is left beside it.
+4. **Commit and tag**: one commit, `Release <version>`, tagged `v<version>` exactly.
+5. **Open the next snapshot** in the next commit: `VERSION` becomes the next PATCH as a snapshot (`1.0.1.dev0` after
+   `1.0.0`), over a `changelog.d/` holding only its README. The first change that needs more raises it, beside its
+   fragment.
+6. **Push both at once**: `git push --atomic origin main v<version>`, so a released number never sits on `main`
+   unpublished.
+7. **Publish from the tag.** From a checkout of `v<version>`, `python3 scripts/language-index.py <index> <package>` in a
+   slipwai checkout packs it and adds its entry. It refuses a package the `version` check fails and a number already
+   spent: a release the index holds with other bytes, or a snapshot of a release it holds.
+
+A released number is spent: never move a `v*` tag and never publish two packages under one number. The `version`
+check refuses a release with no entry, one that is not the newest entry, one beside an unspent fragment, a snapshot of
+a released number or below the newest entry, and a snapshot over an empty `changelog.d/` that claims more than the next
+PATCH. The same steps are slipwai's language-package contract, *Cutting a package release*.
 
 ## Adding a framework
 

@@ -1,7 +1,8 @@
 # The entry being written
 
 One file per change. Together they are the `CHANGELOG.md` entry for the release `VERSION` is a snapshot of,
-and they are assembled into it when that release is cut. `CHANGELOG.md` holds released entries only.
+and they are assembled into it, and deleted, when that release is cut by hand (`README.md`, *Cutting a release*).
+`CHANGELOG.md` holds released entries only.
 
 A fragment is a level and the prose, and the prose is the entry's, verbatim:
 
