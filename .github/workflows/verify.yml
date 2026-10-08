@@ -1,0 +1,59 @@
+name: verify
+
+on:
+  push:
+    branches: [main]
+    # A tag is what publishes. A green run on `main` is a package that works; it is not a package
+    # anybody asked for, and publishing every commit is how a chandlery fills with versions nobody
+    # chose. `git tag v1.1.0 && git push --follow-tags` is the whole of releasing.
+    tags: ['v*']
+  pull_request:
+  # Asking for the matrix on a branch nobody has merged yet. On `main` and on a tag it runs anyway —
+  # see the `matrix:` line below — so this is for checking a change before it gets there.
+  #
+  #   gh workflow run verify.yml -R <owner>/<repo> -f matrix=true
+  workflow_dispatch:
+    inputs:
+      matrix:
+        description: Run the generated-variant matrix too — builds images and starts containers
+        type: boolean
+        default: false
+
+# A called workflow cannot ask for more than its caller has, and the publish job attaches the release to
+# this repository's own tag — so the permission is granted here or that job never starts. `contents: write`
+# is this repository's own contents and nobody else's; the channel is reached with a token, not with this.
+permissions:
+  contents: write
+
+jobs:
+  conformance:
+    uses: ROBCOATVG/slipwai_v2_Fork/.github/workflows/package.yml@main
+    with:
+      package: toy
+      kind: language
+      # **The two-gate split, for a package.** A pull request gets conformance, which is the fast half and
+      # the one an author runs over and over. `main` and a tag get the matrix as well — every generated
+      # variant of every backend, each held to its own native gate — because that is the integration point
+      # and a check nobody remembers to ask for is not a check. It was opt-in everywhere, and the only way
+      # to opt in was a person typing `gh workflow run`, which is the same as off.
+      # One line, not a folded block: this feeds a `type: boolean` input, and a folded scalar is one more
+      # thing between the expression and the value that could hand it a string with a newline on the end.
+      matrix: ${{ inputs.matrix || github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v') }}
+      # What the runner needs installed before the matrix runs: `go`, `node`, `java`, `uv`, `pack`. The
+      # matrix generates a project per row and runs *that project's* own `make verify`, so the runner needs
+      # this language's toolchain — and this package is the only thing that knows which.
+      toolchains: ''
+      # Packages to install beside this one before conformance, space-separated. A framework's family is
+      # worked out from its own `requires` and does not go here. This is for a *family*, which declares no
+      # backend of its own and is proved through one of its frameworks — `java` names `java-spring`.
+      beside: ''
+      # Where a tag publishes to. Empty publishes nowhere, which is right for a fork.
+      channel: ''
+      # Which keel to prove against: a bare version is one on PyPI, anything else is passed to pip as it
+      # stands. Empty installs `slipwai`, which is right once the version you need is published.
+      keel: 'git+https://github.com/ROBCOATVG/slipwai_v2_Fork@main'
+    # A token that may open a pull request on that channel. Without it a tag still builds the release
+    # and attaches it to itself, and `slipwai package register` finishes the job by hand — so a fork
+    # needs no credential and a package nobody owns can still be proved.
+    secrets:
+      chandlery_token: ${{ secrets.CHANDLERY_TOKEN }}
