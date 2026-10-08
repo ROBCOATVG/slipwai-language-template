@@ -42,11 +42,13 @@ jobs:
       # What the runner needs installed before the matrix runs: `go`, `node`, `java`, `uv`, `pack`. The
       # matrix generates a project per row and runs *that project's* own `make verify`, so the runner needs
       # this language's toolchain — and this package is the only thing that knows which.
-      toolchains: ''
+      # The `react-vite` row builds a browser app.
+      toolchains: 'node'
       # Packages to install beside this one before conformance, space-separated. A framework's family is
       # worked out from its own `requires` and does not go here. This is for a *family*, which declares no
       # backend of its own and is proved through one of its frameworks — `java` names `java-spring`.
-      beside: ''
+      # The `react-vite` row needs a language that answers the npm workspace.
+      beside: 'typescript'
       # Where a tag publishes to. Empty publishes nowhere, which is right for a fork.
       channel: ''
       # Which keel to prove against: a bare version is one on PyPI, anything else is passed to pip as it
