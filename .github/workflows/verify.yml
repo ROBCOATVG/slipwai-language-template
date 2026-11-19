@@ -27,10 +27,7 @@ permissions:
 
 jobs:
   conformance:
-    # Pinned to the keel this template was last proved against (2026-10-17). Against slipwai's current main its
-    # toy backend misses three newer conformance obligations (write-side files on the state rung, a repository
-    # for event-model paths), so a package made from it starts by moving this pin and meeting them.
-    uses: ROBCOATVG/slipwai/.github/workflows/package.yml@73ad8030a8eb117844b29bfaef136d33114aa806
+    uses: ROBCOATVG/slipwai/.github/workflows/package.yml@main
     with:
       package: toy
       kind: language
@@ -56,7 +53,7 @@ jobs:
       channel: ''
       # Which keel to prove against: a bare version is one on PyPI, anything else is passed to pip as it
       # stands. Empty installs `slipwai`, which is right once the version you need is published.
-      keel: 'git+https://github.com/ROBCOATVG/slipwai@73ad8030a8eb117844b29bfaef136d33114aa806'
+      keel: 'git+https://github.com/ROBCOATVG/slipwai@main'
     # A token that may open a pull request on that channel. Without it a tag still builds the release
     # and attaches it to itself, and `slipwai package register` finishes the job by hand — so a fork
     # needs no credential and a package nobody owns can still be proved.
